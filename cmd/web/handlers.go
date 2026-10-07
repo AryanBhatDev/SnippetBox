@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	_ "html/template"
 	"net/http"
 	"strconv"
 
@@ -19,46 +18,24 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, snippet := range snippets {
-		fmt.Fprintf(w, "%+v\n", snippet)
-	}
+	// Call the newTemplateData() helper to get a templateData struct containing
+	// the 'default' data (which for now is just the current year), and add the
+	// snippets slice to it.
+	data := app.newTemplateData(r)
+	data.Snippets = snippets
 
-	// files := []string{
-	//     "./ui/html/base.tmpl",
-	//     "./ui/html/partials/nav.tmpl",
-	//     "./ui/html/pages/home.tmpl",
-	// }
-
-	// ts, err := template.ParseFiles(files...)
-	// if err != nil {
-	//     app.serverError(w, r, err)
-	//     return
-	// }
-
-	// err = ts.ExecuteTemplate(w, "base", nil)
-	// if err != nil {
-	//     app.serverError(w, r, err)
-	// }
+	// Pass the data to the render() helper as normal.
+	app.render(w, r, http.StatusOK, "home.tmpl", data)
 }
 
-func (app application) homePost(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello from post"))
-}
-
-func (app application) snippetView(w http.ResponseWriter, r *http.Request) {
-
-	id := r.PathValue("id")
-
-	idStringToInt, err := strconv.Atoi(id)
-
-	if idStringToInt < 0 || err != nil {
-
+func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil || id < 1 {
 		http.NotFound(w, r)
 		return
 	}
 
-	data, err := app.snippets.Get(idStringToInt)
-
+	snippet, err := app.snippets.Get(id)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			http.NotFound(w, r)
@@ -68,7 +45,15 @@ func (app application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "%+v", data)
+	// And do the same thing again here...
+	data := app.newTemplateData(r)
+	data.Snippet = snippet
+
+	app.render(w, r, http.StatusOK, "view.tmpl", data)
+}
+
+func (app application) homePost(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Hello from post"))
 }
 
 func (app application) snippetCreate(w http.ResponseWriter, r *http.Request) {

@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"html/template"
 	"log/slog"
 	"net/http"
 	"os"
@@ -12,40 +13,42 @@ import (
 )
 
 type application struct {
-	logger   *slog.Logger
-	snippets *models.SnippetModel
+	logger        *slog.Logger
+	snippets      *models.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 func main() {
-
-	port := flag.String("addr", ":4000", "server port")
-
+	addr := flag.String("addr", ":4000", "HTTP network address")
 	dsn := flag.String("dsn", "web:pass@/snippetbox?parseTime=true", "MySQL data source name")
-
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level:     slog.LevelDebug,
-		AddSource: true,
-	}))
-
 	flag.Parse()
-	db, err := openDB(*dsn)
 
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+
+	db, err := openDB(*dsn)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+	defer db.Close()
+
+	// Initialize a new template cache...
+	templateCache, err := newTemplateCache()
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
 
-	defer db.Close()
-
-	app := application{
-		logger:   logger,
-		snippets: &models.SnippetModel{DB: db},
+	// And add it to the application dependencies.
+	app := &application{
+		logger:        logger,
+		snippets:      &models.SnippetModel{DB: db},
+		templateCache: templateCache,
 	}
 
-	logger.Info("starting server", slog.String("addr", *port))
+	logger.Info("starting server", "addr", *addr)
 
-	err = http.ListenAndServe(*port, app.routes())
-
+	err = http.ListenAndServe(*addr, app.routes())
 	logger.Error(err.Error())
 	os.Exit(1)
 }
