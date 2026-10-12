@@ -45,3 +45,17 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
 
 	buf.WriteTo(w)
 }
+
+func (app *application) decodePostForm(r *http.Request, dst any) error {
+	err := r.ParseForm()
+	if err != nil {
+		return err
+	}
+
+	err = app.formDecoder.Decode(dst, r.PostForm)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
