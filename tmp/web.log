@@ -1,5 +1,0 @@
-{"time":"2026-10-01T20:46:24.435568+05:30","level":"INFO","source":{"function":"main.main","file":"/Users/aryanbhat/Lets-GO/cmd/web/main.go","line":43},"msg":"starting server","addr":":4000"}
-{"time":"2026-10-05T12:52:56.923651+05:30","level":"INFO","source":{"function":"main.main","file":"/Users/aryanbhat/Lets-GO/cmd/web/main.go","line":45},"msg":"starting server","addr":":4000"}
-{"time":"2026-10-05T13:25:19.744071+05:30","level":"INFO","source":{"function":"main.main","file":"/Users/aryanbhat/Lets-GO/cmd/web/main.go","line":45},"msg":"starting server","addr":":4000"}
-&{<nil> 0x7779bab28820}
-{0   0001-01-01 00:00:00 +0000 UTC 0001-01-01 00:00:00 +0000 UTC}
